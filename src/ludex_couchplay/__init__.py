@@ -1,8 +1,10 @@
 """Offers "Play split-screen" on Steam and Heroic games, started through CouchPlay.
 
-CouchPlay starts a saved profile (its players, controllers and screens) with ``--game`` replacing the
-game of the players whose launcher matches. The profile is the plugin's one setting. CouchPlay is found
-as the ``couchplay-gamemode`` command, else as the Flatpak ``io.github.hikaps.couchplay``.
+Two actions: "Play split-screen" starts a saved CouchPlay profile (its players, controllers and screens)
+with ``--game`` replacing the game of the players whose launcher matches, and is offered once the
+``profile`` setting is set; "Quick split-screen" starts a session without a profile (``--quick N``: new
+default players, controllers assigned automatically, nothing saved) and is always offered. CouchPlay is
+found as the ``couchplay-gamemode`` command, else as the Flatpak ``io.github.hikaps.couchplay``.
 """
 from __future__ import annotations
 
@@ -44,19 +46,31 @@ def game_argument(store: str, store_id: str) -> str | None:
     return None
 
 
+PLAYERS = ("2", "3", "4")
+
+
 def actions(store: str, store_id: str, settings: Mapping[str, str]) -> Sequence[GameAction]:
-    profile = settings.get("profile", "").strip()
     game = game_argument(store, str(store_id))
-    start = command() if profile and game else None
-    if start is None or profile.startswith("-") or "\0" in profile:
+    start = command() if game else None
+    if start is None or game is None:
         return []
-    return [GameAction("split-screen", "Play split-screen", [*start, "--profile", profile, "--start", "--game", game])]
+    found = []
+    profile = settings.get("profile", "").strip()
+    if profile and not profile.startswith("-") and "\0" not in profile:
+        found.append(GameAction("split-screen", "Play split-screen", [*start, "--profile", profile, "--start", "--game", game]))
+    players = settings.get("players", PLAYERS[0])
+    if players in PLAYERS:
+        found.append(GameAction("quick", f"Quick split-screen ({players} players)", [*start, "--quick", players, "--game", game]))
+    return found
 
 
 PLUGIN = Provider(
     name="couchplay",
     help="Play a Steam or Heroic game in split-screen with CouchPlay",
     config_fields=(),
-    settings=(ConfigField("profile", "CouchPlay profile to start the game in", optional=True),),
+    settings=(
+        ConfigField("profile", "CouchPlay profile for \"Play split-screen\" (leave empty to offer only the quick session)", optional=True),
+        ConfigField("players", "Players in a quick session", optional=True, kind="choice", choices=PLAYERS),
+    ),
     actions=actions,
 )

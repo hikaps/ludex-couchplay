@@ -26,16 +26,21 @@ def test_game_argument_maps_each_store_to_couchplays_form(store, store_id, expec
     assert cp.game_argument(store, store_id) == expected
 
 
-def test_the_action_starts_the_profile_with_the_game(native):
-    [action] = cp.actions("steam", "220", {"profile": "Couch"})
-    assert (action.id, action.label) == ("split-screen", "Play split-screen")
-    assert action.argv == [native, "--profile", "Couch", "--start", "--game", "steam:220"]
+def test_a_profile_adds_the_profile_action_and_a_quick_session_is_always_offered(native):
+    [quick] = cp.actions("steam", "220", {})
+    assert (quick.id, quick.label) == ("quick", "Quick split-screen (2 players)")
+    assert quick.argv == [native, "--quick", "2", "--game", "steam:220"]
+    profile, quick = cp.actions("steam", "220", {"profile": "Couch", "players": "4"})
+    assert (profile.id, profile.label) == ("split-screen", "Play split-screen")
+    assert profile.argv == [native, "--profile", "Couch", "--start", "--game", "steam:220"]
+    assert quick.label == "Quick split-screen (4 players)" and quick.argv[1:3] == ["--quick", "4"]
 
 
-def test_nothing_is_offered_without_a_profile_a_supported_store_or_couchplay(native, monkeypatch):
-    assert cp.actions("steam", "220", {}) == [] and cp.actions("steam", "220", {"profile": "  "}) == []
+def test_nothing_is_offered_for_an_unsupported_store_or_without_couchplay_and_bad_values_are_ignored(native, monkeypatch):
     assert cp.actions("local", "x", {"profile": "Couch"}) == []
-    assert cp.actions("steam", "220", {"profile": "--game"}) == []  # a profile can never act as an option
+    assert [a.id for a in cp.actions("steam", "220", {"profile": "  "})] == ["quick"]
+    assert [a.id for a in cp.actions("steam", "220", {"profile": "--game"})] == ["quick"]  # a profile can never act as an option
+    assert cp.actions("steam", "220", {"players": "9; rm"}) == []  # no profile, and a count CouchPlay would refuse
     monkeypatch.setattr(cp.shutil, "which", lambda name: None)
     assert cp.actions("steam", "220", {"profile": "Couch"}) == []
 
@@ -43,7 +48,7 @@ def test_nothing_is_offered_without_a_profile_a_supported_store_or_couchplay(nat
 def test_the_flatpak_is_used_when_the_command_is_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(cp.shutil, "which", lambda name: "/usr/bin/flatpak" if name == "flatpak" else None)
     monkeypatch.setattr(cp, "_flatpak_installed", lambda home=None: True)
-    [action] = cp.actions("heroic", "abc", {"profile": "P"})
+    action = cp.actions("heroic", "abc", {"profile": "P"})[0]
     assert action.argv == ["/usr/bin/flatpak", "run", cp.FLATPAK_ID, "--profile", "P", "--start", "--game", "heroic:sideload:abc"]
     monkeypatch.setattr(cp, "_flatpak_installed", lambda home=None: False)
     assert cp.actions("heroic", "abc", {"profile": "P"}) == []
@@ -63,4 +68,4 @@ def test_ludex_loads_it_and_asks_for_its_settings(native, monkeypatch, tmp_path)
     monkeypatch.setenv("LUDEX_HOME", str(tmp_path))
     loaded, problems = load_providers([EntryPoint("couchplay", "ludex_couchplay:PLUGIN", "ludex.providers")])
     assert problems == {} and loaded["couchplay"].capabilities == ("actions",)
-    assert loaded["couchplay"].actions("steam", "220") == []  # the setting is read per call; none is set
+    assert [a.id for a in loaded["couchplay"].actions("steam", "220")] == ["quick"]  # settings are read per call; none is set
