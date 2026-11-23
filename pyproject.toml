@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ludex-couchplay"
+version = "0.1.0"
+description = "ludex plugin: play a game in split-screen with CouchPlay"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = []  # ludex is the host; it provides `ludex.plugins`
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.entry-points."ludex.providers"]
+couchplay = "ludex_couchplay:PLUGIN"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ludex_couchplay"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
