@@ -17,6 +17,8 @@ ludex config couchplay.profile "My profile"         # optional: also offer "Play
 
 The profile is the name of a saved CouchPlay profile (its players, controllers and screens).
 
+A player whose launcher is "None (choose when starting)" in the profile (hikaps/couchplay#183) gets the launcher of the game you start, so one profile serves Steam and Heroic games. A player with a fixed launcher only gets games from that launcher; if no player matches, CouchPlay refuses to start.
+
 CouchPlay is found as the `couchplay-gamemode` command, else as the Flatpak `io.github.hikaps.couchplay`.
 
 | ludex store | CouchPlay `--game` |
