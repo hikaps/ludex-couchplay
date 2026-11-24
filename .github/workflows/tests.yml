@@ -1,0 +1,16 @@
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv venv --python ${{ matrix.python }} && uv pip install -e ".[test]" "ludex-core>=0.65.0"
+      - run: .venv/bin/python -m pytest -q

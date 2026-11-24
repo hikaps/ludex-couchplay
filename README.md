@@ -25,7 +25,7 @@ CouchPlay is found as the `couchplay-gamemode` command, else as the Flatpak `io.
 | `heroic` (sideloads) | `heroic:sideload:APPNAME` |
 | `epic` | `heroic:legendary:APPNAME` |
 
-Needs a ludex release with plugin `actions` (see hikaps/ludex#123).
+Needs ludex 0.65.0 or later (plugin `actions`).
 
 ## Develop
 

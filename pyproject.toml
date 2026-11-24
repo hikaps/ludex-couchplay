@@ -10,7 +10,7 @@ readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-dependencies = []  # ludex is the host; it provides `ludex.plugins`
+dependencies = []  # ludex (>=0.65.0, for plugin `actions`) is the host and provides `ludex.plugins`
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
