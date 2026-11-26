@@ -8,7 +8,7 @@ Same workflow as [ludex](https://github.com/hikaps/ludex/blob/main/CONTRIBUTING.
 - `develop`: integration.
 - One change per branch, created from `develop`. Open the PR with `gh pr create --base develop`; the default branch is `main`, so `--base` is required.
 - A PR is merged only after the maintainer explicitly approves that PR; green CI alone never merges it.
-- Feature PRs are squash-merged into `develop`. The PR title becomes the commit subject: imperative, Conventional Commits, at most 68 characters.
+- Feature PRs are squash-merged into `develop`. Set the squash commit subject to the PR title (GitHub defaults to the first commit's subject for a one-commit PR): imperative, Conventional Commits, at most 68 characters.
 
 ## Releases
 
