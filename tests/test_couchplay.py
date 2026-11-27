@@ -69,3 +69,14 @@ def test_ludex_loads_it_and_asks_for_its_settings(native, monkeypatch, tmp_path)
     loaded, problems = load_providers([EntryPoint("couchplay", "ludex_couchplay:PLUGIN", "ludex.providers")])
     assert problems == {} and loaded["couchplay"].capabilities == ("actions",)
     assert [a.id for a in loaded["couchplay"].actions("steam", "220")] == ["quick"]  # settings are read per call; none is set
+
+
+def test_the_lan_action_is_an_opt_in_for_steam_games_with_a_profile(native):
+    ids = [a.id for a in cp.actions("steam", "220", {"profile": "Couch", "lan": "yes"})]
+    assert ids == ["split-screen", "split-screen-lan", "quick"]
+    lan = cp.actions("steam", "220", {"profile": "Couch", "lan": "yes"})[1]
+    assert lan.argv[:3] == [cp.sys.executable, "-c", cp.LAN_BOOT]
+    assert lan.argv[4:9] == ["--profile", "Couch", "--app-id", "220", "--"]
+    assert lan.argv[9:] == [native, "--profile", "Couch", "--start", "--exit-after-session", "--game", "steam:220"]
+    for store, settings in (("steam", {"profile": "Couch", "lan": "no"}), ("steam", {"lan": "yes"}), ("heroic", {"profile": "Couch", "lan": "yes"})):
+        assert "split-screen-lan" not in [a.id for a in cp.actions(store, "220", settings)]

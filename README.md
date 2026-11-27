@@ -6,6 +6,7 @@ It adds buttons to a game's page in `ludex gui` and the commands `ludex action G
 
 - **Quick split-screen (N players)**: always offered. CouchPlay starts a session with no profile: N players (2 to 4) named `player1`..`playerN` (created if missing), controllers assigned automatically, default layout and display. Nothing is saved.
 - **Play split-screen**: offered once you set a profile. CouchPlay starts that saved profile with this game replacing the game of the players who use the game's launcher; the profile itself is not changed.
+- **Play split-screen with LAN invites**: opt-in (`ludex config couchplay.lan yes`), Steam games only, needs the profile. Gives each seat of the profile its own gbe_fork identity in its Wine prefix, runs the [`ludex_lan` agent](LAN.md) for the length of the session, then starts the profile as above (`--exit-after-session`). The game must already run with gbe_fork (`ludex patches patch … gbe_fork --app-id APPID`); a seat with no prefix yet gets its identity the next time, after the game has started once. The controller overlay is not started: it needs a CouchPlay with `pad capture`.
 
 ## Install
 
