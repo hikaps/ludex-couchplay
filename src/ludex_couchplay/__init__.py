@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -47,6 +48,8 @@ def game_argument(store: str, store_id: str) -> str | None:
 
 
 PLAYERS = ("2", "3", "4")
+# ludex puts this plugin's folder on sys.path only inside its own process, so the action hands it to the interpreter.
+LAN_BOOT = "import sys; sys.path.insert(0, sys.argv.pop(1)); from ludex_couchplay.lan_session import main; sys.exit(main())"
 
 
 def actions(store: str, store_id: str, settings: Mapping[str, str]) -> Sequence[GameAction]:
@@ -58,6 +61,13 @@ def actions(store: str, store_id: str, settings: Mapping[str, str]) -> Sequence[
     profile = settings.get("profile", "").strip()
     if profile and not profile.startswith("-") and "\0" not in profile:
         found.append(GameAction("split-screen", "Play split-screen", [*start, "--profile", profile, "--start", "--game", game]))
+        if store == "steam" and settings.get("lan") == "yes":
+            found.append(GameAction(
+                "split-screen-lan", "Play split-screen with LAN invites",
+                [sys.executable, "-c", LAN_BOOT, str(Path(__file__).resolve().parents[1]),
+                 "--profile", profile, "--app-id", str(store_id), "--",
+                 *start, "--profile", profile, "--start", "--exit-after-session", "--game", game],
+            ))
     players = settings.get("players", PLAYERS[0])
     if players in PLAYERS:
         found.append(GameAction("quick", f"Quick split-screen ({players} players)", [*start, "--quick", players, "--game", game]))
@@ -71,6 +81,7 @@ PLUGIN = Provider(
     settings=(
         ConfigField("profile", "CouchPlay profile for \"Play split-screen\" (leave empty to offer only the quick session)", optional=True),
         ConfigField("players", "Players in a quick session", optional=True, kind="choice", choices=PLAYERS),
+        ConfigField("lan", "Also offer \"Play split-screen with LAN invites\" on Steam games (gbe_fork; needs the profile)", optional=True, kind="yes_no"),
     ),
     actions=actions,
 )
